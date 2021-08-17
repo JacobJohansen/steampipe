@@ -129,6 +129,11 @@ func (r *ControlRun) Start(ctx context.Context, client db_common.Client) {
 
 	queryResult, err := client.Execute(ctx, query, false)
 	if err != nil {
+		if strings.Contains(err.Error(), "error reading from server: EOF") {
+			// try to rerun the query, since the plugin crashed the last time
+			r.Start(ctx, client)
+			return
+		}
 		r.SetError(err)
 		return
 	}
